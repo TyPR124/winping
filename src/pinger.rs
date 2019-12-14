@@ -29,7 +29,6 @@ use std::{
 
 use crate::{Buffer, Error};
 
-#[derive(Copy, Clone)]
 struct Handles {
     v4: HANDLE,
     v6: HANDLE,
@@ -47,7 +46,6 @@ pub struct Pinger {
     ttl: u8,
     df: bool,
     timeout: u32,
-    verify: bool,
 }
 /// An error when creating a Pinger.
 pub enum CreateError {
@@ -88,7 +86,6 @@ impl Pinger {
             ttl: 255,
             df: false,
             timeout: 2000,
-            verify: false,
         };
         match (v4, v6) {
             (INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE) => Err(CreateError::None),
@@ -293,21 +290,16 @@ impl Pinger {
         }
     }
 }
-impl Drop for Pinger {
-    fn drop(&mut self) {
-        if Arc::strong_count(&self.handles) == 1 {
-            drop_handles(*self.handles)
-        }
-    }
-}
 
-fn drop_handles(h: Handles) {
-    if h.v4 != INVALID_HANDLE_VALUE {
-        let ret = unsafe { IcmpCloseHandle(h.v4) };
-        debug_assert_eq!(TRUE, ret);
-    }
-    if h.v6 != INVALID_HANDLE_VALUE {
-        let ret = unsafe { IcmpCloseHandle(h.v6) };
-        debug_assert_eq!(TRUE, ret);
+impl Drop for Handles {
+    fn drop(&mut self) {
+        if self.v4 != INVALID_HANDLE_VALUE {
+            let ret = unsafe { IcmpCloseHandle(self.v4) };
+            debug_assert_eq!(TRUE, ret);
+        }
+        if self.v6 != INVALID_HANDLE_VALUE {
+            let ret = unsafe { IcmpCloseHandle(self.v6) };
+            debug_assert_eq!(TRUE, ret);
+        }
     }
 }
