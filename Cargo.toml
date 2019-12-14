@@ -1,0 +1,35 @@
+[package]
+name = "winping"
+version = "0.1.0"
+authors = ["Tyler Ruckinger"]
+edition = "2018"
+
+description = "An easy-to-use ICMP Echo API for Windows programs without requiring elevated rights"
+documentation = "https://docs.rs/winping"
+repository = "https://github.com/TyPR124/winping"
+keywords = ["ping", "icmp", "windows", "echo", "async"]
+
+readme = "README.md"
+license = "MIT OR Apache-2.0"
+
+[badges.maintenance]
+status = "actively-developed"
+
+[package.metadata.docs.rs]
+default-target = "x86_64-pc-windows-msvc"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+static_assertions = "1.1.0"
+lazy_static = "1.4.0"
+# Depend on forked winapi for now. Will change this when icmpapi is merged
+winapi = { package = "winapi_forked_icmpapi", version = "0.3.7", features = ["errhandlingapi", "icmpapi", "iphlpapi", "impl-default", "handleapi", "synchapi", "winbase", "winerror"] }
+
+[dev-dependencies]
+futures = "*"
+
+[features]
+default = []
+no_async = []
+real-tests = []
