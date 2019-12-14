@@ -27,7 +27,7 @@ lazy_static = "1.4.0"
 winapi = { package = "winapi_forked_icmpapi", version = "0.3.7", features = ["errhandlingapi", "icmpapi", "iphlpapi", "impl-default", "handleapi", "synchapi", "winbase", "winerror"] }
 
 [dev-dependencies]
-futures = "*"
+futures = "0.3.1"
 
 [features]
 default = []
