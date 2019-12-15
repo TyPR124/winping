@@ -142,7 +142,7 @@ impl Pinger {
             ..Default::default()
         }
     }
-    /// Send an ICMPv4 request to the destination address.
+    /// Send an ICMPv4 request to the destination address. On success, returns the round trip time in milliseconds.
     pub fn send4(&self, dst: Ipv4Addr, buf: &mut Buffer) -> Result<u32, Error> {
         buf.init_for_send();
         let ret = unsafe {
@@ -168,7 +168,7 @@ impl Pinger {
             }
         }
     }
-    /// Sends an ICMPv4 request from the source address to the destination address.
+    /// Sends an ICMPv4 request from the source address to the destination address. On success, returns the round trip time in milliseconds.
     pub fn send4_from(&self, src: Ipv4Addr, dst: Ipv4Addr, buf: &mut Buffer) -> Result<u32, Error> {
         buf.init_for_send();
         let ret = unsafe {
@@ -198,7 +198,7 @@ impl Pinger {
             }
         }
     }
-    /// Sends an ICMPv6 request to the destination address.
+    /// Sends an ICMPv6 request to the destination address. On success, returns the round trip time in milliseconds.
     pub fn send6(&self, dst: Ipv6Addr, buf: &mut Buffer) -> Result<u32, Error> {
         let mut dst = SOCKADDR_IN6 {
             sin6_family: AF_INET6 as _,
@@ -234,7 +234,7 @@ impl Pinger {
             }
         }
     }
-    /// Sends an ICMPv6 request from the source address to the destination address.
+    /// Sends an ICMPv6 request from the source address to the destination address. On success, returns the round trip time in milliseconds.
     pub fn send6_from(&self, src: Ipv6Addr, dst: Ipv6Addr, buf: &mut Buffer) -> Result<u32, Error> {
         let mut dst = SOCKADDR_IN6 {
             sin6_family: AF_INET6 as _,
@@ -275,14 +275,14 @@ impl Pinger {
             }
         }
     }
-    /// Sends an ICMP request to the destination address. Supports both v4 and v6.
+    /// Sends an ICMP request to the destination address. Supports both v4 and v6. On success, returns the round trip time in milliseconds.
     pub fn send(&self, dst: IpAddr, buf: &mut Buffer) -> Result<u32, Error> {
         match dst {
             IpAddr::V4(ip) => self.send4(ip, buf),
             IpAddr::V6(ip) => self.send6(ip, buf),
         }
     }
-    /// Sends an ICMP request from the source address to the destination address. Supports both v4 and v6.
+    /// Sends an ICMP request from the source address to the destination address. Supports both v4 and v6. On success, returns the round trip time in milliseconds.
     pub fn send_from(&mut self, src_dst_pair: IpPair, buf: &mut Buffer) -> Result<u32, Error> {
         match src_dst_pair {
             IpPair::V4 { src, dst } => self.send4_from(src, dst, buf),

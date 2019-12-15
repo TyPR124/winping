@@ -121,38 +121,38 @@ impl AsyncPinger {
     pub fn timeout(&self) -> u32 {
         self.timeout
     }
-    /// Send an ICMPv4 request to the destination address.
+    /// Send an ICMPv4 request to the destination address. On success, returns the round trip time in milliseconds.
     pub fn send4(&self, dst: Ipv4Addr, mut buf: Buffer) -> PingFuture {
         buf.init_for_send();
         self.worker
             .begin_v4(None, dst, buf, self.ttl, self.timeout, self.df)
     }
-    /// Sends an ICMPv4 request from the source address to the destination address.
+    /// Sends an ICMPv4 request from the source address to the destination address. On success, returns the round trip time in milliseconds.
     pub fn send4_from(&self, src: Ipv4Addr, dst: Ipv4Addr, mut buf: Buffer) -> PingFuture {
         buf.init_for_send();
         self.worker
             .begin_v4(Some(src), dst, buf, self.ttl, self.timeout, self.df)
     }
-    /// Sends an ICMPv6 request to the destination address.
+    /// Sends an ICMPv6 request to the destination address. On success, returns the round trip time in milliseconds.
     pub fn send6(&self, dst: Ipv6Addr, mut buf: Buffer) -> PingFuture {
         buf.init_for_send();
         self.worker
             .begin_v6(None, dst, buf, self.ttl, self.timeout, self.df)
     }
-    /// Sends an ICMPv6 request from the source address to the destination address.
+    /// Sends an ICMPv6 request from the source address to the destination address. On success, returns the round trip time in milliseconds.
     pub fn send6_from(&self, src: Ipv6Addr, dst: Ipv6Addr, mut buf: Buffer) -> PingFuture {
         buf.init_for_send();
         self.worker
             .begin_v6(Some(src), dst, buf, self.ttl, self.timeout, self.df)
     }
-    /// Sends an ICMP request to the destination address. Supports both v4 and v6.
+    /// Sends an ICMP request to the destination address. Supports both v4 and v6. On success, returns the round trip time in milliseconds.
     pub fn send(&self, dst: IpAddr, buf: Buffer) -> PingFuture {
         match dst {
             IpAddr::V4(dst) => self.send4(dst, buf),
             IpAddr::V6(dst) => self.send6(dst, buf),
         }
     }
-    /// Sends an ICMP request from the source address to the destination address. Supports both v4 and v6.
+    /// Sends an ICMP request from the source address to the destination address. Supports both v4 and v6. On success, returns the round trip time in milliseconds.
     pub fn send_from(&self, src_dst_pair: IpPair, buf: Buffer) -> PingFuture {
         match src_dst_pair {
             IpPair::V4 { src, dst } => self.send4_from(src, dst, buf),

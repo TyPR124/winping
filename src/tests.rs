@@ -26,7 +26,7 @@ pub(crate) fn get_v6_pinger() -> Pinger {
 
 #[test]
 fn send4() {
-    let mut buf = Buffer::new();
+    let mut buf = Buffer::with_data(vec![0u8; 128]);
     let pinger = get_v4_pinger();
     let res = pinger.send4(LO4, &mut buf);
     assert!(res.is_ok());
@@ -54,7 +54,7 @@ fn send4_from_unreachable() {
 }
 #[test]
 fn send6() {
-    let mut buf = Buffer::new();
+    let mut buf = Buffer::with_data(vec![0u8; 128]);
     let pinger = get_v6_pinger();
     let res = pinger.send6(LO6, &mut buf);
     assert!(res.is_ok());
