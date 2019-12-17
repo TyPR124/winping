@@ -43,5 +43,5 @@ pub use pinger::{CreateError, IpPair, Pinger};
 #[cfg(test)]
 mod tests;
 
-#[cfg(all(test, feature = "real-tests"))]
+#[cfg(all(test, any(feature = "real-tests-v4", feature = "real-tests-v6")))]
 mod real_tests;

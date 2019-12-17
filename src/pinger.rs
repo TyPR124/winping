@@ -160,7 +160,7 @@ impl Pinger {
         if ret == 0 {
             Err(Error::from_lasterror())
         } else {
-            let reply = buf.as_echo_reply().unwrap();
+            let reply = buf.set_has_echo_reply().unwrap();
             if reply.Status == IP_SUCCESS {
                 Ok(reply.RoundTripTime)
             } else {
@@ -190,7 +190,7 @@ impl Pinger {
         if ret == 0 {
             Err(Error::from_lasterror())
         } else {
-            let reply = buf.as_echo_reply().unwrap();
+            let reply = buf.set_has_echo_reply().unwrap();
             if reply.Status == IP_SUCCESS {
                 Ok(reply.RoundTripTime)
             } else {
@@ -226,7 +226,7 @@ impl Pinger {
         if ret == 0 {
             Err(Error::from_lasterror())
         } else {
-            let reply = buf.as_echo_reply6().unwrap();
+            let reply = buf.set_has_echo_reply6().unwrap();
             if reply.Status == IP_SUCCESS {
                 Ok(reply.RoundTripTime as u32)
             } else {
@@ -267,7 +267,7 @@ impl Pinger {
         if ret == 0 {
             Err(Error::from_lasterror())
         } else {
-            let reply = buf.as_echo_reply6().unwrap();
+            let reply = buf.set_has_echo_reply6().unwrap();
             if reply.Status == IP_SUCCESS {
                 Ok(reply.RoundTripTime as u32)
             } else {

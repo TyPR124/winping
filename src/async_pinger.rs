@@ -285,6 +285,7 @@ lazy_static! {
         let ret = Mutex::new(tx);
 
         thread::spawn(move||loop {
+            // WaitForSingleObjectEx returns if INPUT_EVENT is signaled, or if callback_fn is called
             match unsafe { WaitForSingleObjectEx(INPUT_EVENT, INFINITE, TRUE) } {
                 WAIT_IO_COMPLETION | WAIT_OBJECT_0 => while try_recv_job(&rx) {},
                 WAIT_FAILED => {
@@ -449,7 +450,7 @@ impl Future for PingFuture {
                 *lock = State::Polled(buf, cx.waker().clone());
                 Poll::Pending
             }
-            State::Ready(buf) => {
+            State::Ready(mut buf) => {
                 drop(lock);
                 let ret = unsafe {
                     match self.kind {
@@ -463,13 +464,13 @@ impl Future for PingFuture {
                     let (status, rtt) = match self.kind {
                         IpKind::V4 => {
                             #[cfg(target_pointer_width = "32")]
-                            let reply = buf.as_echo_reply().unwrap();
+                            let reply = buf.set_has_echo_reply().unwrap();
                             #[cfg(target_pointer_width = "64")]
-                            let reply = buf.as_echo_reply32().unwrap();
+                            let reply = buf.set_has_echo_reply32().unwrap();
                             (reply.Status, reply.RoundTripTime)
                         }
                         IpKind::V6 => {
-                            let reply = buf.as_echo_reply6().unwrap();
+                            let reply = buf.set_has_echo_reply6().unwrap();
                             (reply.Status, reply.RoundTripTime as u32)
                         }
                     };
