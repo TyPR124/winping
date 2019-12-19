@@ -51,6 +51,7 @@ impl Default for Buffer {
 }
 
 impl Buffer {
+    /// Creates a new, empty buffer with no request data.
     pub const fn new() -> Self {
         Self {
             request_data: Vec::new(),
@@ -58,9 +59,10 @@ impl Buffer {
             state: ReplyState::Empty,
         }
     }
-    pub const fn with_data(data: Vec<u8>) -> Self {
+    /// Creates a new buffer with the provided request data.
+    pub const fn with_data(request_data: Vec<u8>) -> Self {
         Self {
-            request_data: data,
+            request_data,
             reply_data: Vec::new(),
             state: ReplyState::Empty,
         }
@@ -136,6 +138,8 @@ impl Buffer {
     pub(crate) fn set_filled6(&mut self) {
         self.state = ReplyState::Filled6(self.request_data.len())
     }
+    /// Gets the reply data from the last ping this buffer was used in. The reply data may be empty
+    /// if a reuqest was not send with this buffer, or if there was no reply to the sent request.
     pub fn reply_data(&self) -> &[u8] {
         let (len, offset) = match self.state {
             ReplyState::Empty => (0, 0),
@@ -154,6 +158,8 @@ impl Buffer {
             unsafe { std::slice::from_raw_parts(self.reply_data_ptr().cast::<u8>().add(offset), len) }
         }
     }
+    /// Gets the responding Ipv6Addr from the last request this buffer was involved in. Returns None
+    /// if the last request was v6, the buffer wasn't used in a request, or there was no reply.
     pub fn responding_ipv4(&self) -> Option<Ipv4Addr> {
         match self.state {
             ReplyState::Filled4(..) => {
@@ -163,6 +169,8 @@ impl Buffer {
             _ => None
         }
     }
+    /// Gets the responding Ipv6Addr from the last request this buffer was involved in. Returns None
+    /// if the last request was v4, the buffer wasn't used in a request, or there was no reply.
     pub fn responding_ipv6(&self) -> Option<Ipv6Addr> {
         match self.state {
             ReplyState::Filled6(..) => {
@@ -172,6 +180,8 @@ impl Buffer {
             _ => None
         }
     }
+    /// Gets the responding IpAddr from the last request this buffer was involved in. Returns None
+    /// if the buffer wasn't used in a request, or there was no reply.
     pub fn responding_ip(&self) -> Option<IpAddr> {
         self.responding_ipv4().map(IpAddr::V4).or(self.responding_ipv6().map(IpAddr::V6))
     }
