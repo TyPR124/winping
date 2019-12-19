@@ -160,11 +160,13 @@ impl Pinger {
         if ret == 0 {
             Err(Error::from_lasterror())
         } else {
-            let reply = buf.set_has_echo_reply().unwrap();
-            if reply.Status == IP_SUCCESS {
-                Ok(reply.RoundTripTime)
+            let reply = buf.as_echo_reply().unwrap();
+            let (status, rtt) = (reply.Status, reply.RoundTripTime);
+            buf.set_filled4();
+            if status == IP_SUCCESS {
+                Ok(rtt)
             } else {
-                Err(Error::from_iperror(reply.Status))
+                Err(Error::from_iperror(status))
             }
         }
     }
@@ -190,11 +192,13 @@ impl Pinger {
         if ret == 0 {
             Err(Error::from_lasterror())
         } else {
-            let reply = buf.set_has_echo_reply().unwrap();
-            if reply.Status == IP_SUCCESS {
-                Ok(reply.RoundTripTime)
+            let reply = buf.as_echo_reply().unwrap();
+            let (status, rtt) = (reply.Status, reply.RoundTripTime);
+            buf.set_filled4();
+            if status == IP_SUCCESS {
+                Ok(rtt)
             } else {
-                Err(Error::from_iperror(reply.Status))
+                Err(Error::from_iperror(status))
             }
         }
     }
@@ -226,11 +230,13 @@ impl Pinger {
         if ret == 0 {
             Err(Error::from_lasterror())
         } else {
-            let reply = buf.set_has_echo_reply6().unwrap();
-            if reply.Status == IP_SUCCESS {
-                Ok(reply.RoundTripTime as u32)
+            let reply = buf.as_echo_reply6().unwrap();
+            let (status, rtt) = (reply.Status, reply.RoundTripTime as u32);
+            buf.set_filled6();
+            if status == IP_SUCCESS {
+                Ok(rtt)
             } else {
-                Err(Error::from_iperror(reply.Status))
+                Err(Error::from_iperror(status))
             }
         }
     }
@@ -267,11 +273,13 @@ impl Pinger {
         if ret == 0 {
             Err(Error::from_lasterror())
         } else {
-            let reply = buf.set_has_echo_reply6().unwrap();
-            if reply.Status == IP_SUCCESS {
-                Ok(reply.RoundTripTime as u32)
+            let reply = buf.as_echo_reply6().unwrap();
+            let (status, rtt) = (reply.Status, reply.RoundTripTime as u32);
+            buf.set_filled6();
+            if status == IP_SUCCESS {
+                Ok(rtt)
             } else {
-                Err(Error::from_iperror(reply.Status))
+                Err(Error::from_iperror(status))
             }
         }
     }

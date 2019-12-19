@@ -6,7 +6,10 @@ use winapi::{
     um::ipexport::{ICMPV6_ECHO_REPLY, ICMP_ECHO_REPLY},
 };
 
-use std::mem::{align_of, size_of};
+use std::{
+    mem::{self, align_of, size_of},
+    net::{IpAddr, Ipv4Addr, Ipv6Addr},
+};
 
 // Chunk is a lump of u8, apropriately sized and aligned
 // for the necessary ICMP(V6)_ECHO_REPLY(32) types on
@@ -105,33 +108,33 @@ impl Buffer {
     pub(crate) fn reply_data_len(&self) -> u32 {
         (self.reply_data.len() * CHUNK_SIZE) as u32
     }
-    pub(crate) fn set_has_echo_reply(&mut self) -> Option<&ICMP_ECHO_REPLY> {
+    pub(crate) fn as_echo_reply(&self) -> Option<&ICMP_ECHO_REPLY> {
         if self.reply_data_len() as usize >= size_of::<ICMP_ECHO_REPLY>() {
-            self.state = ReplyState::Filled4(self.request_data.len());
             Some(unsafe { &*self.reply_data_ptr().cast() })
         } else {
             None
         }
     }
     #[cfg(all(target_pointer_width = "64", not(feature = "no_async")))]
-    pub(crate) fn set_has_echo_reply32(&mut self) -> Option<&ICMP_ECHO_REPLY32> {
+    pub(crate) fn as_echo_reply32(&self) -> Option<&ICMP_ECHO_REPLY32> {
         if self.reply_data_len() as usize >= size_of::<ICMP_ECHO_REPLY32>() {
-            // ReplyState does not need to differentiate echo_reply32.
-            // The reply data is stored after an ICMP_ECHO_REPLY (not 32), and
-            // is not moved when IcmpParseReplies converts it to ICMP_ECHO_REPLY32
-            self.state = ReplyState::Filled4(self.request_data.len());
             Some(unsafe { &*self.reply_data_ptr().cast() })
         } else {
             None
         }
     }
-    pub(crate) fn set_has_echo_reply6(&mut self) -> Option<&ICMPV6_ECHO_REPLY> {
+    pub(crate) fn as_echo_reply6(&self) -> Option<&ICMPV6_ECHO_REPLY> {
         if self.reply_data_len() as usize >= size_of::<ICMPV6_ECHO_REPLY>() {
-            self.state = ReplyState::Filled6(self.request_data.len());
             Some(unsafe { &*self.reply_data_ptr().cast() })
         } else {
             None
         }
+    }
+    pub(crate) fn set_filled4(&mut self) {
+        self.state = ReplyState::Filled4(self.request_data.len())
+    } 
+    pub(crate) fn set_filled6(&mut self) {
+        self.state = ReplyState::Filled6(self.request_data.len())
     }
     pub fn reply_data(&self) -> &[u8] {
         let (len, offset) = match self.state {
@@ -140,6 +143,7 @@ impl Buffer {
                 (len, size_of::<ICMP_ECHO_REPLY>())
             }
             ReplyState::Filled6(len) => {
+                // RFC 4443, section 4.2, reply data MUST be same as request data
                 (len, size_of::<ICMPV6_ECHO_REPLY>())
             }
         };
@@ -149,5 +153,26 @@ impl Buffer {
         } else {
             unsafe { std::slice::from_raw_parts(self.reply_data_ptr().cast::<u8>().add(offset), len) }
         }
+    }
+    pub fn responding_ipv4(&self) -> Option<Ipv4Addr> {
+        match self.state {
+            ReplyState::Filled4(..) => {
+                let ipv4: Ipv4Addr = unsafe {mem::transmute(self.as_echo_reply().unwrap().Address)};
+                Some(ipv4)
+            }
+            _ => None
+        }
+    }
+    pub fn responding_ipv6(&self) -> Option<Ipv6Addr> {
+        match self.state {
+            ReplyState::Filled6(..) => {
+                let ipv6: Ipv6Addr = unsafe {mem::transmute(self.as_echo_reply6().unwrap().Address.sin6_addr)};
+                Some(ipv6)
+            }
+            _ => None
+        }
+    }
+    pub fn responding_ip(&self) -> Option<IpAddr> {
+        self.responding_ipv4().map(IpAddr::V4).or(self.responding_ipv6().map(IpAddr::V6))
     }
 }

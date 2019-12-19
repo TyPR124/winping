@@ -464,14 +464,19 @@ impl Future for PingFuture {
                     let (status, rtt) = match self.kind {
                         IpKind::V4 => {
                             #[cfg(target_pointer_width = "32")]
-                            let reply = buf.set_has_echo_reply().unwrap();
+                            let reply = buf.as_echo_reply().unwrap();
                             #[cfg(target_pointer_width = "64")]
-                            let reply = buf.set_has_echo_reply32().unwrap();
-                            (reply.Status, reply.RoundTripTime)
+                            let reply = buf.as_echo_reply32().unwrap();
+
+                            let (status, rtt) = (reply.Status, reply.RoundTripTime);
+                            buf.set_filled4();
+                            (status, rtt)
                         }
                         IpKind::V6 => {
-                            let reply = buf.set_has_echo_reply6().unwrap();
-                            (reply.Status, reply.RoundTripTime as u32)
+                            let reply = buf.as_echo_reply6().unwrap();
+                            let (status, rtt) = (reply.Status, reply.RoundTripTime as u32);
+                            buf.set_filled6();
+                            (status, rtt)
                         }
                     };
                     if status == IP_SUCCESS {
