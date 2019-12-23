@@ -1,7 +1,8 @@
-  name: Tests (GNU)
-  
-  on: [push]
-  
+name: Tests (GNU)
+
+on: [push]
+
+jobs:
   test_x86_64-gnu:
     runs-on: windows-latest
     steps:
