@@ -27,6 +27,7 @@
 //!
 #![cfg(any(target_os = "windows", doc))]
 #![forbid(unreachable_patterns)]
+#![allow(clippy::needless_doctest_main)]
 
 #[cfg(not(feature = "no_async"))]
 mod async_pinger;

@@ -40,8 +40,8 @@ assert_impl_all!(Buffer: Send, Sync);
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
 enum ReplyState {
     Empty,
-    Filled4(usize),
-    Filled6(usize),
+    Filled4 { data_len: usize },
+    Filled6 { data_len: usize },
 }
 
 impl Default for Buffer {
@@ -133,56 +133,60 @@ impl Buffer {
         }
     }
     pub(crate) fn set_filled4(&mut self) {
-        self.state = ReplyState::Filled4(self.request_data.len())
-    } 
+        let data_len = self.as_echo_reply().unwrap().DataSize as usize;
+        self.state = ReplyState::Filled4 { data_len }
+    }
     pub(crate) fn set_filled6(&mut self) {
-        self.state = ReplyState::Filled6(self.request_data.len())
+        // RFC 4443, section 4.2, reply data MUST be same as request data
+        let data_len = self.request_data.len();
+        self.state = ReplyState::Filled6 { data_len }
     }
     /// Gets the reply data from the last ping this buffer was used in. The reply data may be empty
     /// if a reuqest was not send with this buffer, or if there was no reply to the sent request.
     pub fn reply_data(&self) -> &[u8] {
         let (len, offset) = match self.state {
             ReplyState::Empty => (0, 0),
-            ReplyState::Filled4(len) => {
-                (len, size_of::<ICMP_ECHO_REPLY>())
+            ReplyState::Filled4 { data_len } => {
+                // No need to treat ICMP_ECHO_REPLY32 separately.
+                // IcmpParseReplies does not move the rpely data when
+                // converting ICMP_ECHO_REPLY to ICMP_ECHO_REPLY32,
+                // so offset is still size of ICMP_ECHO_REPLY.
+                (data_len, size_of::<ICMP_ECHO_REPLY>())
             }
-            ReplyState::Filled6(len) => {
-                // RFC 4443, section 4.2, reply data MUST be same as request data
-                (len, size_of::<ICMPV6_ECHO_REPLY>())
-            }
+            ReplyState::Filled6 { data_len } => (data_len, size_of::<ICMPV6_ECHO_REPLY>()),
         };
 
         if len == 0 || offset + len > self.reply_data_len() as usize {
             &[]
         } else {
-            unsafe { std::slice::from_raw_parts(self.reply_data_ptr().cast::<u8>().add(offset), len) }
+            unsafe {
+                std::slice::from_raw_parts(self.reply_data_ptr().cast::<u8>().add(offset), len)
+            }
         }
     }
     /// Gets the responding Ipv6Addr from the last request this buffer was involved in. Returns None
     /// if the last request was v6, the buffer wasn't used in a request, or there was no reply.
     pub fn responding_ipv4(&self) -> Option<Ipv4Addr> {
-        match self.state {
-            ReplyState::Filled4(..) => {
-                let ipv4: Ipv4Addr = unsafe {mem::transmute(self.as_echo_reply().unwrap().Address)};
-                Some(ipv4)
-            }
-            _ => None
-        }
+        let addr = match self.state {
+            ReplyState::Filled4 { .. } => self.as_echo_reply().unwrap().Address,
+            _ => return None,
+        };
+        Some(unsafe { mem::transmute(addr) })
     }
     /// Gets the responding Ipv6Addr from the last request this buffer was involved in. Returns None
     /// if the last request was v4, the buffer wasn't used in a request, or there was no reply.
     pub fn responding_ipv6(&self) -> Option<Ipv6Addr> {
-        match self.state {
-            ReplyState::Filled6(..) => {
-                let ipv6: Ipv6Addr = unsafe {mem::transmute(self.as_echo_reply6().unwrap().Address.sin6_addr)};
-                Some(ipv6)
-            }
-            _ => None
-        }
+        let addr = match self.state {
+            ReplyState::Filled6 { .. } => self.as_echo_reply6().unwrap().Address.sin6_addr,
+            _ => return None,
+        };
+        Some(unsafe { mem::transmute(addr) })
     }
     /// Gets the responding IpAddr from the last request this buffer was involved in. Returns None
     /// if the buffer wasn't used in a request, or there was no reply.
     pub fn responding_ip(&self) -> Option<IpAddr> {
-        self.responding_ipv4().map(IpAddr::V4).or(self.responding_ipv6().map(IpAddr::V6))
+        self.responding_ipv4()
+            .map(IpAddr::V4)
+            .or_else(||self.responding_ipv6().map(IpAddr::V6))
     }
 }

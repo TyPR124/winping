@@ -27,7 +27,9 @@ pub(crate) fn get_v6_pinger() -> Pinger {
 #[test]
 fn send4() {
     let mut buf = Buffer::new();
-    for x in 0..=255 { buf.request_data.push(x) }
+    for x in 0..=255 {
+        buf.request_data.push(x)
+    }
     let pinger = get_v4_pinger();
     let res = pinger.send4(LO4, &mut buf);
     assert!(res.is_ok());
@@ -37,7 +39,9 @@ fn send4() {
 #[test]
 fn send4_timeout() {
     let mut buf = Buffer::new();
-    for x in 0..=255 { buf.request_data.push(x) }
+    for x in 0..=255 {
+        buf.request_data.push(x)
+    }
     let pinger = get_v4_pinger();
     let res = pinger.send4(BOGON4, &mut buf);
     assert_eq!(Err(Error::Timeout), res);
@@ -47,7 +51,9 @@ fn send4_timeout() {
 #[test]
 fn send4_from() {
     let mut buf = Buffer::new();
-    for x in 0..=255 { buf.request_data.push(x) }
+    for x in 0..=255 {
+        buf.request_data.push(x)
+    }
     let pinger = get_v4_pinger();
     let res = pinger.send4_from(LO4, LO4, &mut buf);
     assert!(res.is_ok());
@@ -57,7 +63,9 @@ fn send4_from() {
 #[test]
 fn send4_from_unreachable() {
     let mut buf = Buffer::new();
-    for x in 0..=255 { buf.request_data.push(x) }
+    for x in 0..=255 {
+        buf.request_data.push(x)
+    }
     let pinger = get_v4_pinger();
     let res = pinger.send4_from(LO4, BOGON4, &mut buf);
     assert_eq!(Err(Error::NetUnreachable), res);
@@ -67,7 +75,9 @@ fn send4_from_unreachable() {
 #[test]
 fn send6() {
     let mut buf = Buffer::new();
-    for x in 0..=255 { buf.request_data.push(x) }
+    for x in 0..=255 {
+        buf.request_data.push(x)
+    }
     let pinger = get_v6_pinger();
     let res = pinger.send6(LO6, &mut buf);
     assert!(res.is_ok());
@@ -78,7 +88,9 @@ fn send6() {
 #[test]
 fn send6_from() {
     let mut buf = Buffer::new();
-    for x in 0..=255 { buf.request_data.push(x) }
+    for x in 0..=255 {
+        buf.request_data.push(x)
+    }
     let pinger = get_v6_pinger();
     let res = pinger.send6_from(LO6, LO6, &mut buf);
     assert!(res.is_ok());
@@ -97,7 +109,9 @@ fn async_send4() {
 
     for _ in 0..10 {
         let mut buf = Buffer::new();
-        for x in 0..=255 { buf.request_data.push(x) }
+        for x in 0..=255 {
+            buf.request_data.push(x)
+        }
         let fut = FutureObj::new(Box::pin(pinger.send4(dst, buf).map(|res| {
             assert!(res.result.is_ok());
             assert_eq!(res.buffer.reply_data(), &res.buffer.request_data[..]);
@@ -118,7 +132,9 @@ fn async_send4_timeout() {
 
     for _ in 0..10 {
         let mut buf = Buffer::new();
-        for x in 0..=255 { buf.request_data.push(x) }
+        for x in 0..=255 {
+            buf.request_data.push(x)
+        }
         let fut = FutureObj::new(Box::pin(pinger.send4(dst, buf).map(|res| {
             assert_eq!(res.result, Err(Error::Timeout));
             assert!(res.buffer.reply_data().is_empty());
@@ -139,7 +155,9 @@ fn async_send6() {
 
     for _ in 0..10 {
         let mut buf = Buffer::new();
-        for x in 0..=255 { buf.request_data.push(x) }
+        for x in 0..=255 {
+            buf.request_data.push(x)
+        }
         let fut = FutureObj::new(Box::pin(pinger.send6(dst, buf).map(|res| {
             assert!(res.result.is_ok());
             assert_eq!(res.buffer.reply_data(), &res.buffer.request_data[..]);
@@ -161,7 +179,9 @@ fn async_send4_from() {
 
     for _ in 0..10 {
         let mut buf = Buffer::new();
-        for x in 0..=255 { buf.request_data.push(x) }
+        for x in 0..=255 {
+            buf.request_data.push(x)
+        }
         let fut = FutureObj::new(Box::pin(pinger.send4_from(src, dst, buf).map(|res| {
             assert!(res.result.is_ok());
             assert_eq!(res.buffer.reply_data(), &res.buffer.request_data[..]);
@@ -183,7 +203,9 @@ fn async_send4_from_unreachable() {
 
     for _ in 0..10 {
         let mut buf = Buffer::new();
-        for x in 0..=255 { buf.request_data.push(x) }
+        for x in 0..=255 {
+            buf.request_data.push(x)
+        }
         let fut = FutureObj::new(Box::pin(pinger.send4_from(src, dst, buf).map(|res| {
             assert_eq!(res.result, Err(Error::NetUnreachable));
             assert!(res.buffer.reply_data().is_empty());
@@ -205,7 +227,9 @@ fn async_send6_from() {
 
     for _ in 0..10 {
         let mut buf = Buffer::new();
-        for x in 0..=255 { buf.request_data.push(x) }
+        for x in 0..=255 {
+            buf.request_data.push(x)
+        }
         let fut = FutureObj::new(Box::pin(pinger.send6_from(src, dst, buf).map(|res| {
             assert!(res.result.is_ok());
             assert_eq!(res.buffer.reply_data(), &res.buffer.request_data[..]);
