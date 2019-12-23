@@ -1,0 +1,21 @@
+  name: Tests (GNU)
+  
+  on: [push]
+  
+  test_x86_64-gnu:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: Install Toolchain
+      run: rustup toolchain install stable-x86_64-pc-windows-gnu
+    - name: Run tests
+      run: cargo +stable-x86_64-pc-windows-gnu test --target x86_64-pc-windows-gnu --verbose
+
+  test_i686-gnu:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: Install Toolchain
+      run: rustup toolchain install stable-i686-pc-windows-gnu
+    - name: Run tests
+      run: cargo +stable-i686-pc-windows-gnu test --target i686-pc-windows-gnu --verbose
