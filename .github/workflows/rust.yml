@@ -3,11 +3,20 @@ name: Rust
 on: [push]
 
 jobs:
-  build:
+  test_x86_64-msvc:
 
     runs-on: windows-latest
 
     steps:
     - uses: actions/checkout@v1
     - name: Run tests
-      run: cargo test --verbose
+      run: cargo +stable-x86_64-pc-windows-msvc test --target x86_64-pc-windows-msvc --verbose
+      
+  test_i686-msvc:
+
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Run tests
+      run: cargo +stable-i686-pc-windows-msvc test --target i686-pc-windows-msvc --verbose
