@@ -1,6 +1,7 @@
 [package]
 name = "winping"
-version = "0.1.3"
+# Wait for merged winapi (see dependencies) for 1.0 release.
+version = "0.9.0"
 authors = ["Tyler Ruckinger"]
 edition = "2018"
 
@@ -13,7 +14,7 @@ readme = "README.md"
 license = "MIT OR Apache-2.0"
 
 [badges.maintenance]
-status = "actively-developed"
+status = "passively-maintained"
 
 [package.metadata.docs.rs]
 default-target = "x86_64-pc-windows-msvc"

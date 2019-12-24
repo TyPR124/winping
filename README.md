@@ -13,10 +13,14 @@ An easy-to-use ICMP Echo library for Windows. Does not require elevated permissi
 
 To use in your own project, simply add `winping = "0.1"` to your dependencies in your Cargo.toml file. See [docs.rs](https://docs.rs/winping) for examples and documentation.
 
-## OS Support
+## OS Compatability
 
-As of now, this crate is only tested on Windows 10. I will update this when I have been able to test on more systems. This crate will almost certainly not work on Windows XP. I suspect it will work for Vista but have no plans to officially support anything before Windows 7. Automated tests run on Windows Server 2019 with both MSVC and GNU compilers.
+This crate has been tested on Windows 7, Windows 8.1, and Windows 10.
+
+This crate intends to support Windows 7 through Windows 10, including both desktop and server variants.
+
+This crate is very unlikely to work with Windows XP. It may work with Vista, however Vista will not be supported.
 
 ## Contributions
 
-Contributions of all kinds are welcome. File a GitHub issue if you find a bug or think something can be improved. If you wish to contribute code, please run `cargo fmt` and `cargo clippy`. You should probably also run `cargo test`.
+Contributions of all kinds are welcome. File a GitHub issue if you find a problem, bug, or think something can be improved. If you wish to contribute code, please run `cargo fmt` and `cargo clippy`. You should probably also run `cargo test`.
