@@ -187,6 +187,6 @@ impl Buffer {
     pub fn responding_ip(&self) -> Option<IpAddr> {
         self.responding_ipv4()
             .map(IpAddr::V4)
-            .or_else(||self.responding_ipv6().map(IpAddr::V6))
+            .or_else(|| self.responding_ipv6().map(IpAddr::V6))
     }
 }
