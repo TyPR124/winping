@@ -40,6 +40,28 @@ use std::{
     thread,
 };
 
+/* For future reference:
+ *
+ * The approach taken (see doc on AsyncPinger::new) and the reason I don't use
+ * simple event-based async is for several reasons:
+ *  1. Rust async specifies futures can be polled once and only checked again
+ *     after being awaken. For this reason, using an event doesn't work as there
+ *     is no callback when waiting for an event.
+ *  2. Using a callback-based approach in the calling thread (as apposed to spawning
+ *     a thread) only works if the executor uses wait functions in a certain way,
+ *     which I do not think can be relied on.
+ *  3. Using event's in the new thread (as apposed to callbacks) would limit the number
+ *     of events that could waited on.
+ *
+ * Therefore, my approach is to spawn a new thread, and and handle async via callback
+ * for all async pingers in that thread.
+ *
+ * State (which may be mutated by either calling thread or spawned thread) is stored in
+ * an Arc<Mutex> to ensure (1) lack of data races, and (2) either thread dropping the
+ * state does not invalidate the other.
+ *
+ */
+
 use crate::{Buffer, Error, IpPair};
 /// A pinger that does not block when sending.
 #[derive(Clone)]
