@@ -21,7 +21,7 @@ use winapi::um::ipexport::IP_OPTION_INFORMATION;
 use winapi::um::ipexport::IP_OPTION_INFORMATION32 as IP_OPTION_INFORMATION;
 
 use std::{
-    fmt::{self, Debug, Formatter},
+    fmt::{self, Debug, Display, Formatter},
     mem,
     net::{IpAddr, Ipv4Addr, Ipv6Addr},
     sync::Arc,
@@ -70,6 +70,14 @@ impl Debug for CreateError {
         )
     }
 }
+
+impl Display for CreateError {
+    fn fmt(&self, out: &mut Formatter) -> fmt::Result {
+        Debug::fmt(self, out)
+    }
+}
+
+impl std::error::Error for CreateError {}
 
 impl Pinger {
     /// Creates a new Pinger.
