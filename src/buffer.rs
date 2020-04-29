@@ -96,23 +96,31 @@ impl Buffer {
         self.reply_data.resize(chunks, Chunk([0; CHUNK_SIZE]));
         self.state = ReplyState::Empty;
     }
-    pub(crate) fn request_data_ptr(&self) -> *mut VOID {
-        let ptr: *const u8 = self.request_data.as_ptr();
+    pub(crate) fn request_data_ptr(&mut self) -> *mut VOID {
+        let ptr: *mut u8 = self.request_data.as_mut_ptr();
         ptr as *mut VOID
     }
     pub(crate) fn request_data_len(&self) -> u16 {
         self.request_data.len() as u16
     }
-    pub(crate) fn reply_data_ptr(&self) -> *mut VOID {
-        let ptr: *const Chunk = self.reply_data.as_ptr();
+    pub(crate) fn reply_data_ptr(&mut self) -> *mut VOID {
+        let ptr: *mut Chunk = self.reply_data.as_mut_ptr();
         ptr as *mut VOID
+    }
+    fn reply_data_ptr_const(&self) -> *const VOID {
+        let ptr: *const Chunk = self.reply_data.as_ptr();
+        ptr as *const VOID
     }
     pub(crate) fn reply_data_len(&self) -> u32 {
         (self.reply_data.len() * CHUNK_SIZE) as u32
     }
     pub(crate) fn as_echo_reply(&self) -> Option<&ICMP_ECHO_REPLY> {
         if self.reply_data_len() as usize >= size_of::<ICMP_ECHO_REPLY>() {
-            Some(unsafe { &*self.reply_data_ptr().cast() })
+            // Safety:
+            // We've ensured we have enough bytes, and they must be init.
+            // The definition of Chunk ensures we have correct alignment.
+            // Everything is Copy.
+            Some(unsafe { &*self.reply_data_ptr_const().cast() })
         } else {
             None
         }
@@ -120,14 +128,18 @@ impl Buffer {
     #[cfg(all(target_pointer_width = "64", feature = "async"))]
     pub(crate) fn as_echo_reply32(&self) -> Option<&ICMP_ECHO_REPLY32> {
         if self.reply_data_len() as usize >= size_of::<ICMP_ECHO_REPLY32>() {
-            Some(unsafe { &*self.reply_data_ptr().cast() })
+            Some(unsafe { &*self.reply_data_ptr_const().cast() })
         } else {
             None
         }
     }
     pub(crate) fn as_echo_reply6(&self) -> Option<&ICMPV6_ECHO_REPLY> {
         if self.reply_data_len() as usize >= size_of::<ICMPV6_ECHO_REPLY>() {
-            Some(unsafe { &*self.reply_data_ptr().cast() })
+            // Safety:
+            // We've ensured we have enough bytes, and they must be init.
+            // The definition of Chunk ensures we have correct alignment.
+            // Everything is Copy.
+            Some(unsafe { &*self.reply_data_ptr_const().cast() })
         } else {
             None
         }
@@ -148,7 +160,7 @@ impl Buffer {
             ReplyState::Empty => (0, 0),
             ReplyState::Filled4 { data_len } => {
                 // No need to treat ICMP_ECHO_REPLY32 separately.
-                // IcmpParseReplies does not move the rpely data when
+                // IcmpParseReplies does not move the reply data when
                 // converting ICMP_ECHO_REPLY to ICMP_ECHO_REPLY32,
                 // so offset is still size of ICMP_ECHO_REPLY.
                 (data_len, size_of::<ICMP_ECHO_REPLY>())
@@ -160,7 +172,7 @@ impl Buffer {
             &[]
         } else {
             unsafe {
-                std::slice::from_raw_parts(self.reply_data_ptr().cast::<u8>().add(offset), len)
+                std::slice::from_raw_parts(self.reply_data_ptr_const().cast::<u8>().add(offset), len)
             }
         }
     }
