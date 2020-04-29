@@ -73,7 +73,7 @@ impl Debug for Error {
     fn fmt(&self, out: &mut Formatter) -> fmt::Result {
         match self {
             Error::Timeout => write!(out, "Request timed out"),
-            Error::HostUnreachable => write!(out, "Dstination host unreachable"),
+            Error::HostUnreachable => write!(out, "Destination host unreachable"),
             Error::NetUnreachable => write!(out, "Destination network unreachable"),
             Error::TtlExpired => write!(out, "TTL expired in transit"),
             Error::ReassemblyExpired => write!(out, "Reassembly timed out waiting for fragments"),
