@@ -117,7 +117,7 @@ impl Buffer {
             None
         }
     }
-    #[cfg(all(target_pointer_width = "64", not(feature = "no_async")))]
+    #[cfg(all(target_pointer_width = "64", feature = "async"))]
     pub(crate) fn as_echo_reply32(&self) -> Option<&ICMP_ECHO_REPLY32> {
         if self.reply_data_len() as usize >= size_of::<ICMP_ECHO_REPLY32>() {
             Some(unsafe { &*self.reply_data_ptr().cast() })

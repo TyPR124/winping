@@ -29,13 +29,13 @@
 #![forbid(unreachable_patterns)]
 #![allow(clippy::needless_doctest_main)]
 
-#[cfg(not(feature = "no_async"))]
+#[cfg(feature = "async")]
 mod async_pinger;
 mod buffer;
 mod error;
 mod pinger;
 
-#[cfg(not(feature = "no_async"))]
+#[cfg(feature = "async")]
 pub use async_pinger::{AsyncPinger, AsyncResult, PingFuture};
 pub use buffer::Buffer;
 pub use error::Error;

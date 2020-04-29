@@ -32,7 +32,7 @@ futures = "0.3.1"
 
 [features]
 default = []
-no_async = []
-real-tests-v4 = []
-real-tests-v6 = []
+async = []
+real-tests-v4 = ["async"]
+real-tests-v6 = ["async"]
 real-tests = ["real-tests-v4", "real-tests-v6"]
