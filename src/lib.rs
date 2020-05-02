@@ -36,7 +36,7 @@ mod error;
 mod pinger;
 
 #[cfg(feature = "async")]
-pub use async_pinger::{AsyncPinger, AsyncResult, PingFuture};
+pub use async_pinger::{AsyncPinger, AsyncResult, PingFuture, ASYNC_BUFFER_SIZE};
 pub use buffer::Buffer;
 pub use error::Error;
 pub use pinger::{CreateError, IpPair, Pinger};

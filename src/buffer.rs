@@ -172,7 +172,10 @@ impl Buffer {
             &[]
         } else {
             unsafe {
-                std::slice::from_raw_parts(self.reply_data_ptr_const().cast::<u8>().add(offset), len)
+                std::slice::from_raw_parts(
+                    self.reply_data_ptr_const().cast::<u8>().add(offset),
+                    len,
+                )
             }
         }
     }

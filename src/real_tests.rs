@@ -41,7 +41,13 @@ fn async_send4_google_dns() {
         bufb.request_data.push(x);
     }
     let pinger = AsyncPinger::new();
-    let [AsyncResult { result: resa, buffer: bufa }, AsyncResult { result: resb, buffer: bufb }] = futures::executor::block_on(async {
+    let [AsyncResult {
+        result: resa,
+        buffer: bufa,
+    }, AsyncResult {
+        result: resb,
+        buffer: bufb,
+    }] = futures::executor::block_on(async {
         let a = pinger.send4(GOOGLE_DNS_A_V4, bufa);
         let b = pinger.send4(GOOGLE_DNS_B_V4, bufb);
         [a.await, b.await]
@@ -85,7 +91,13 @@ fn async_send6_google_dns() {
         bufb.request_data.push(x);
     }
     let pinger = AsyncPinger::new();
-    let [AsyncResult { result: resa, buffer: bufa }, AsyncResult { result: resb, buffer: bufb }] = futures::executor::block_on(async {
+    let [AsyncResult {
+        result: resa,
+        buffer: bufa,
+    }, AsyncResult {
+        result: resb,
+        buffer: bufb,
+    }] = futures::executor::block_on(async {
         let a = pinger.send6(GOOGLE_DNS_A_V6, bufa);
         let b = pinger.send6(GOOGLE_DNS_B_V6, bufb);
         [a.await, b.await]
