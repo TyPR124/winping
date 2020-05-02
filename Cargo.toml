@@ -31,7 +31,7 @@ winapi = { package = "winapi_forked_icmpapi", version = "0.3.7", features = ["er
 futures = "0.3.1"
 
 [features]
-default = []
+default = ["async"]
 async = []
 real-tests-v4 = ["async"]
 real-tests-v6 = ["async"]
