@@ -299,7 +299,7 @@ static mut ICMP6_HANDLE: HANDLE = INVALID_HANDLE_VALUE;
 // The highest priority method is an optional run-time value.
 
 static ASYNC_BUFFER_SIZE_CT: Option<&'static str> = std::option_env!("WINPING_ASYNC_BUFFER_SIZE");
-/// This `pub static mut` variable can be modified at run-time
+/// This variable can be modified at run-time
 /// to determine the size of the inter-thread buffer to use
 /// for AsyncPinger. This buffer is specifically used for sending
 /// jobs (ping requests) to the thread which handles the async IO
@@ -308,11 +308,12 @@ static ASYNC_BUFFER_SIZE_CT: Option<&'static str> = std::option_env!("WINPING_AS
 /// an AsyncPinger, and once set it will override any compile-time
 /// value (which can be set by defining a compile-time environment
 /// variable named WINPING_ASYNC_BUFFER_SIZE). If neither the
-/// compile-time or the run-time values are set, AsyncPinger falls
+/// compile-time nor the run-time values are set, AsyncPinger falls
 /// back on a default value of 1024.
 ///
 /// Note that if the compile-time environment variable is set and
-/// cannot be parsed, this will result in a run-time panic!
+/// cannot be parsed, this will result in a run-time panic the first
+/// time an AsyncPinger is created!
 ///
 /// # Safety
 ///
