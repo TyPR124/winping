@@ -299,8 +299,11 @@ static mut ICMP6_HANDLE: HANDLE = INVALID_HANDLE_VALUE;
 // The highest priority method is an optional run-time value.
 
 static ASYNC_BUFFER_SIZE_CT: Option<&'static str> = std::option_env!("WINPING_ASYNC_BUFFER_SIZE");
-/// This variable can be modified at run-time
-/// to determine the size of the inter-thread buffer to use
+static mut ASYNC_BUFFER_SIZE: Option<usize> = None;
+static ASYNC_BUFFER_SIZE_DEFAULT: usize = 1024;
+
+/// This function can be used to
+/// to set the size of the inter-thread buffer used
 /// for AsyncPinger. This buffer is specifically used for sending
 /// jobs (ping requests) to the thread which handles the async IO
 /// (as described in docs for `AsyncPinger::new`). As such, this
@@ -320,13 +323,14 @@ static ASYNC_BUFFER_SIZE_CT: Option<&'static str> = std::option_env!("WINPING_AS
 /// It is unsafe to set this variable because it is global and mutable
 /// with no protection against data races. If you set this variable,
 /// it MUST be done prior to creating any AsyncPinger.
-pub static mut ASYNC_BUFFER_SIZE: Option<usize> = None;
-static ASYNC_BUFFER_SIZE_DEFAULT: usize = 1024;
+pub unsafe fn set_async_buffer_size(size: usize) {
+    ASYNC_BUFFER_SIZE = Some(size);
+}
 
 lazy_static! {
     static ref ASYNC_SENDER: Mutex<SyncSender<Job>> = {
         // Safety: reading value of pub static mut ASYNC_BUFFER_SIZE - it is up to user to not cause data-races, as described
-        // in docs for the variable.
+        // in docs for set_async_buffer_size.
         let channel_size = unsafe { ASYNC_BUFFER_SIZE.unwrap_or_else(||
             ASYNC_BUFFER_SIZE_CT.map_or(ASYNC_BUFFER_SIZE_DEFAULT, |s| s.parse().expect("Failed to parse value of WINPING_ASYNC_BUFFER_SIZE compile-time environment variable"))
         )};
