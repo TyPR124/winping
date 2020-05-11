@@ -1,6 +1,7 @@
 use crate::*;
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 
+#[cfg(feature = "async")]
 use futures::{
     executor::LocalPool,
     task::{FutureObj, Spawn},
@@ -98,7 +99,7 @@ fn send6_from() {
     assert_eq!(buf.responding_ip(), Some(IpAddr::V6(LO6)));
 }
 
-#[cfg(not(feature = "no_async"))]
+#[cfg(feature = "async")]
 #[test]
 fn async_send4() {
     let pinger = AsyncPinger::new();
@@ -121,7 +122,7 @@ fn async_send4() {
     }
     pool.run();
 }
-#[cfg(not(feature = "no_async"))]
+#[cfg(feature = "async")]
 #[test]
 fn async_send4_timeout() {
     let pinger = AsyncPinger::new();
@@ -144,7 +145,7 @@ fn async_send4_timeout() {
     }
     pool.run();
 }
-#[cfg(not(feature = "no_async"))]
+#[cfg(feature = "async")]
 #[test]
 fn async_send6() {
     let pinger = AsyncPinger::new();
@@ -167,7 +168,7 @@ fn async_send6() {
     }
     pool.run();
 }
-#[cfg(not(feature = "no_async"))]
+#[cfg(feature = "async")]
 #[test]
 fn async_send4_from() {
     let pinger = AsyncPinger::new();
@@ -191,7 +192,7 @@ fn async_send4_from() {
     }
     pool.run();
 }
-#[cfg(not(feature = "no_async"))]
+#[cfg(feature = "async")]
 #[test]
 fn async_send4_from_unreachable() {
     let pinger = AsyncPinger::new();
@@ -215,7 +216,7 @@ fn async_send4_from_unreachable() {
     }
     pool.run();
 }
-#[cfg(not(feature = "no_async"))]
+#[cfg(feature = "async")]
 #[test]
 fn async_send6_from() {
     let pinger = AsyncPinger::new();

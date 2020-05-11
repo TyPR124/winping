@@ -225,7 +225,7 @@ impl Worker {
         &self,
         src: Option<Ipv4Addr>,
         dst: Ipv4Addr,
-        buf: Buffer,
+        mut buf: Buffer,
         ttl: u8,
         timeout: u32,
         df: bool,
@@ -258,7 +258,7 @@ impl Worker {
         &self,
         src: Option<Ipv6Addr>,
         dst: Ipv6Addr,
-        buf: Buffer,
+        mut buf: Buffer,
         ttl: u8,
         timeout: u32,
         df: bool,
@@ -293,9 +293,48 @@ static mut INPUT_EVENT: HANDLE = NULL;
 static mut ICMP_HANDLE: HANDLE = INVALID_HANDLE_VALUE;
 static mut ICMP6_HANDLE: HANDLE = INVALID_HANDLE_VALUE;
 
+// The size of the async channel buffer is determined by one of three possible methods.
+// The lowest priority method is a static default value.
+// The next method is an optional compile-time defined value.
+// The highest priority method is an optional run-time value.
+
+static ASYNC_BUFFER_SIZE_CT: Option<&'static str> = std::option_env!("WINPING_ASYNC_BUFFER_SIZE");
+static mut ASYNC_BUFFER_SIZE: Option<usize> = None;
+static ASYNC_BUFFER_SIZE_DEFAULT: usize = 1024;
+
+/// This function can be used to
+/// to set the size of the inter-thread buffer used
+/// for AsyncPinger. This buffer is specifically used for sending
+/// jobs (ping requests) to the thread which handles the async IO
+/// (as described in docs for `AsyncPinger::new`). As such, this
+/// is a a variable which, if used, must be set prior to creating
+/// an AsyncPinger, and once set it will override any compile-time
+/// value (which can be set by defining a compile-time environment
+/// variable named WINPING_ASYNC_BUFFER_SIZE). If neither the
+/// compile-time nor the run-time values are set, AsyncPinger falls
+/// back on a default value of 1024.
+///
+/// Note that if the compile-time environment variable is set and
+/// cannot be parsed, this will result in a run-time panic the first
+/// time an AsyncPinger is created!
+///
+/// # Safety
+///
+/// It is unsafe to set this variable because it is global and mutable
+/// with no protection against data races. If you set this variable,
+/// it MUST be done prior to creating any AsyncPinger.
+pub unsafe fn set_async_buffer_size(size: usize) {
+    ASYNC_BUFFER_SIZE = Some(size);
+}
+
 lazy_static! {
     static ref ASYNC_SENDER: Mutex<SyncSender<Job>> = {
-        let (tx, rx) = mpsc::sync_channel(1);
+        // Safety: reading value of pub static mut ASYNC_BUFFER_SIZE - it is up to user to not cause data-races, as described
+        // in docs for set_async_buffer_size.
+        let channel_size = unsafe { ASYNC_BUFFER_SIZE.unwrap_or_else(||
+            ASYNC_BUFFER_SIZE_CT.map_or(ASYNC_BUFFER_SIZE_DEFAULT, |s| s.parse().expect("Failed to parse value of WINPING_ASYNC_BUFFER_SIZE compile-time environment variable"))
+        )};
+        let (tx, rx) = mpsc::sync_channel(channel_size);
         const EVENT_ACCESS: DWORD = DELETE | EVENT_MODIFY_STATE | SYNCHRONIZE;
         unsafe {
             INPUT_EVENT = CreateEventExW(NULL as _, NULL as _, 0, EVENT_ACCESS);

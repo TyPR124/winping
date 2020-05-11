@@ -11,7 +11,7 @@ An easy-to-use ICMP Echo library for Windows. Does not require elevated permissi
 
 ## Usage
 
-To use in your own project, simply add `winping = "0.9"` to your dependencies in your Cargo.toml file. See [docs.rs](https://docs.rs/winping) for examples and documentation.
+To use in your own project, simply add `winping = "0.10"` to your dependencies in your Cargo.toml file. See [docs.rs](https://docs.rs/winping) for examples and documentation.
 
 ## OS Compatability
 
