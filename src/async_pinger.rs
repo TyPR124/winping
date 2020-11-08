@@ -344,7 +344,6 @@ lazy_static! {
             ICMP_HANDLE = IcmpCreateFile();
             ICMP6_HANDLE = Icmp6CreateFile();
         }
-        let ret = tx;
 
         thread::spawn(move||loop {
             // WaitForSingleObjectEx returns if INPUT_EVENT is signaled, or if callback_fn is called
@@ -358,7 +357,7 @@ lazy_static! {
             }
         });
 
-        ret
+        tx
     };
 }
 
