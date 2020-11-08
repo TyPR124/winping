@@ -34,6 +34,7 @@ use std::{
     mem::{self, replace},
     net::{IpAddr, Ipv4Addr, Ipv6Addr},
     pin::Pin,
+    sync::atomic::{AtomicBool, AtomicUsize, Ordering},
     sync::mpsc::{self, Receiver, SyncSender},
     sync::{Arc, Mutex},
     task::{Context, Poll, Waker},
@@ -298,7 +299,8 @@ static mut ICMP6_HANDLE: HANDLE = INVALID_HANDLE_VALUE;
 // The highest priority method is an optional run-time value.
 
 static ASYNC_BUFFER_SIZE_CT: Option<&'static str> = std::option_env!("WINPING_ASYNC_BUFFER_SIZE");
-static mut ASYNC_BUFFER_SIZE: Option<usize> = None;
+static ASYNC_BUFFER_SIZE_RT_IS_SET: AtomicBool = AtomicBool::new(false);
+static ASYNC_BUFFER_SIZE_RT: AtomicUsize = AtomicUsize::new(0);
 static ASYNC_BUFFER_SIZE_DEFAULT: usize = 1024;
 
 /// This function can be used to
@@ -316,20 +318,18 @@ static ASYNC_BUFFER_SIZE_DEFAULT: usize = 1024;
 /// Note that if the compile-time environment variable is set and
 /// cannot be parsed, this will result in a run-time panic the first
 /// time an AsyncPinger is created!
-///
-/// # Safety
-///
-/// It is unsafe to set this variable because it is global and mutable
-/// with no protection against data races. If you set this variable,
-/// it MUST be done prior to creating any AsyncPinger.
-pub unsafe fn set_async_buffer_size(size: usize) {
-    ASYNC_BUFFER_SIZE = Some(size);
+pub fn set_async_buffer_size(size: usize) {
+    ASYNC_BUFFER_SIZE_RT.store(size, Ordering::SeqCst);
+    ASYNC_BUFFER_SIZE_RT_IS_SET.store(true, Ordering::SeqCst);
 }
 
 lazy_static! {
     static ref ASYNC_SENDER: SyncSender<Job> = {
+        let channel_size = if ASYNC_BUFFER_SIZE_RT_IS_SET.load(Ordering::Relaxed) {
+            ASYNC_BUFFER_SIZE_RT.load(Ordering::Relaxed)
+        } else {
             ASYNC_BUFFER_SIZE_CT.map_or(ASYNC_BUFFER_SIZE_DEFAULT, |s| s.parse().expect("Failed to parse value of WINPING_ASYNC_BUFFER_SIZE compile-time environment variable"))
-        )};
+        };
         let (tx, rx) = mpsc::sync_channel(channel_size);
         const EVENT_ACCESS: DWORD = DELETE | EVENT_MODIFY_STATE | SYNCHRONIZE;
         unsafe {
