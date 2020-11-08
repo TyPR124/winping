@@ -1,5 +1,11 @@
 # winping release notes
 
+## [0.10.1](https://crates.io/crates/winping/0.10.1)
+
+* Removed unsafe requirement from `set_async_buffer_size` by using atomics instead. This is supposed to be a safe API, after all.
+* Minor corrections to docs.
+* Internally, cleaned up some unneeded synchronization for the read-only ASYNC_SENDER.
+
 ## [0.10.0](https://crates.io/crates/winping/0.10.0)
 
 * Now allows customizing the async buffer size. This is described in the docs for `set_async_buffer_size`

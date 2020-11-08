@@ -34,6 +34,7 @@ use std::{
     mem::{self, replace},
     net::{IpAddr, Ipv4Addr, Ipv6Addr},
     pin::Pin,
+    sync::atomic::{AtomicBool, AtomicUsize, Ordering},
     sync::mpsc::{self, Receiver, SyncSender},
     sync::{Arc, Mutex},
     task::{Context, Poll, Waker},
@@ -110,6 +111,11 @@ impl AsyncPinger {
     /// a single dedicated thread which handles all async IO for all AsyncPingers.
     /// If ICMP handle initialization fails, all ping requests will return
     /// an error.
+    ///
+    /// # Panics
+    ///
+    /// This may panic if the compile-time environment variable `WINPING_ASYNC_BUFFER_SIZE`
+    /// is set but cannot be parsed to a valid [`usize`]
     #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
         Self {
@@ -218,8 +224,7 @@ unsafe impl Send for Job {}
 
 impl Worker {
     fn new() -> Self {
-        let inner = ASYNC_SENDER.lock().unwrap().clone();
-        Self { inner }
+        Self { inner: ASYNC_SENDER.clone() }
     }
     fn begin_v4(
         &self,
@@ -299,10 +304,11 @@ static mut ICMP6_HANDLE: HANDLE = INVALID_HANDLE_VALUE;
 // The highest priority method is an optional run-time value.
 
 static ASYNC_BUFFER_SIZE_CT: Option<&'static str> = std::option_env!("WINPING_ASYNC_BUFFER_SIZE");
-static mut ASYNC_BUFFER_SIZE: Option<usize> = None;
+static ASYNC_BUFFER_SIZE_RT_IS_SET: AtomicBool = AtomicBool::new(false);
+static ASYNC_BUFFER_SIZE_RT: AtomicUsize = AtomicUsize::new(0);
 static ASYNC_BUFFER_SIZE_DEFAULT: usize = 1024;
 
-/// This function can be used to
+/// This function can be used
 /// to set the size of the inter-thread buffer used
 /// for AsyncPinger. This buffer is specifically used for sending
 /// jobs (ping requests) to the thread which handles the async IO
@@ -317,23 +323,18 @@ static ASYNC_BUFFER_SIZE_DEFAULT: usize = 1024;
 /// Note that if the compile-time environment variable is set and
 /// cannot be parsed, this will result in a run-time panic the first
 /// time an AsyncPinger is created!
-///
-/// # Safety
-///
-/// It is unsafe to set this variable because it is global and mutable
-/// with no protection against data races. If you set this variable,
-/// it MUST be done prior to creating any AsyncPinger.
-pub unsafe fn set_async_buffer_size(size: usize) {
-    ASYNC_BUFFER_SIZE = Some(size);
+pub fn set_async_buffer_size(size: usize) {
+    ASYNC_BUFFER_SIZE_RT.store(size, Ordering::SeqCst);
+    ASYNC_BUFFER_SIZE_RT_IS_SET.store(true, Ordering::SeqCst);
 }
 
 lazy_static! {
-    static ref ASYNC_SENDER: Mutex<SyncSender<Job>> = {
-        // Safety: reading value of pub static mut ASYNC_BUFFER_SIZE - it is up to user to not cause data-races, as described
-        // in docs for set_async_buffer_size.
-        let channel_size = unsafe { ASYNC_BUFFER_SIZE.unwrap_or_else(||
+    static ref ASYNC_SENDER: SyncSender<Job> = {
+        let channel_size = if ASYNC_BUFFER_SIZE_RT_IS_SET.load(Ordering::Relaxed) {
+            ASYNC_BUFFER_SIZE_RT.load(Ordering::Relaxed)
+        } else {
             ASYNC_BUFFER_SIZE_CT.map_or(ASYNC_BUFFER_SIZE_DEFAULT, |s| s.parse().expect("Failed to parse value of WINPING_ASYNC_BUFFER_SIZE compile-time environment variable"))
-        )};
+        };
         let (tx, rx) = mpsc::sync_channel(channel_size);
         const EVENT_ACCESS: DWORD = DELETE | EVENT_MODIFY_STATE | SYNCHRONIZE;
         unsafe {
@@ -343,7 +344,6 @@ lazy_static! {
             ICMP_HANDLE = IcmpCreateFile();
             ICMP6_HANDLE = Icmp6CreateFile();
         }
-        let ret = Mutex::new(tx);
 
         thread::spawn(move||loop {
             // WaitForSingleObjectEx returns if INPUT_EVENT is signaled, or if callback_fn is called
@@ -357,7 +357,7 @@ lazy_static! {
             }
         });
 
-        ret
+        tx
     };
 }
 
