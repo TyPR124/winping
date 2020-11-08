@@ -111,6 +111,11 @@ impl AsyncPinger {
     /// a single dedicated thread which handles all async IO for all AsyncPingers.
     /// If ICMP handle initialization fails, all ping requests will return
     /// an error.
+    ///
+    /// # Panics
+    ///
+    /// This may panic if the compile-time environment variable `WINPING_ASYNC_BUFFER_SIZE`
+    /// is set but cannot be parsed to a valid [`usize`]
     #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
         Self {
@@ -303,7 +308,7 @@ static ASYNC_BUFFER_SIZE_RT_IS_SET: AtomicBool = AtomicBool::new(false);
 static ASYNC_BUFFER_SIZE_RT: AtomicUsize = AtomicUsize::new(0);
 static ASYNC_BUFFER_SIZE_DEFAULT: usize = 1024;
 
-/// This function can be used to
+/// This function can be used
 /// to set the size of the inter-thread buffer used
 /// for AsyncPinger. This buffer is specifically used for sending
 /// jobs (ping requests) to the thread which handles the async IO
