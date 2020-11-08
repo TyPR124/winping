@@ -218,8 +218,7 @@ unsafe impl Send for Job {}
 
 impl Worker {
     fn new() -> Self {
-        let inner = ASYNC_SENDER.lock().unwrap().clone();
-        Self { inner }
+        Self { inner: ASYNC_SENDER.clone() }
     }
     fn begin_v4(
         &self,
@@ -328,10 +327,7 @@ pub unsafe fn set_async_buffer_size(size: usize) {
 }
 
 lazy_static! {
-    static ref ASYNC_SENDER: Mutex<SyncSender<Job>> = {
-        // Safety: reading value of pub static mut ASYNC_BUFFER_SIZE - it is up to user to not cause data-races, as described
-        // in docs for set_async_buffer_size.
-        let channel_size = unsafe { ASYNC_BUFFER_SIZE.unwrap_or_else(||
+    static ref ASYNC_SENDER: SyncSender<Job> = {
             ASYNC_BUFFER_SIZE_CT.map_or(ASYNC_BUFFER_SIZE_DEFAULT, |s| s.parse().expect("Failed to parse value of WINPING_ASYNC_BUFFER_SIZE compile-time environment variable"))
         )};
         let (tx, rx) = mpsc::sync_channel(channel_size);
@@ -343,7 +339,7 @@ lazy_static! {
             ICMP_HANDLE = IcmpCreateFile();
             ICMP6_HANDLE = Icmp6CreateFile();
         }
-        let ret = Mutex::new(tx);
+        let ret = tx;
 
         thread::spawn(move||loop {
             // WaitForSingleObjectEx returns if INPUT_EVENT is signaled, or if callback_fn is called
