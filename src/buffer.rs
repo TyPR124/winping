@@ -11,7 +11,7 @@ use std::{
     net::{IpAddr, Ipv4Addr, Ipv6Addr},
 };
 
-use crate::util::{rust_ipv6, rust_ipv4};
+use crate::util::{rust_ipv4, rust_ipv6};
 
 // Chunk is a lump of u8, apropriately sized and aligned
 // for the necessary ICMP(V6)_ECHO_REPLY(32) types on

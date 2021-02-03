@@ -27,7 +27,7 @@ use std::{
 };
 
 use crate::{
-    util::{windows_ipv6, windows_ipv4},
+    util::{windows_ipv4, windows_ipv6},
     Buffer, Error,
 };
 
