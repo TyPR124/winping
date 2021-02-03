@@ -11,7 +11,7 @@ use std::{
     net::{IpAddr, Ipv4Addr, Ipv6Addr},
 };
 
-use crate::util::{wip6_to_rip6, wip_to_rip};
+use crate::util::{rust_ipv6, rust_ipv4};
 
 // Chunk is a lump of u8, apropriately sized and aligned
 // for the necessary ICMP(V6)_ECHO_REPLY(32) types on
@@ -188,7 +188,7 @@ impl Buffer {
             ReplyState::Filled4 { .. } => self.as_echo_reply().unwrap().Address,
             _ => return None,
         };
-        Some(wip_to_rip(addr))
+        Some(rust_ipv4(addr))
     }
     /// Gets the responding Ipv6Addr from the last request this buffer was involved in. Returns None
     /// if the last request was v4, the buffer wasn't used in a request, or there was no reply.
@@ -197,7 +197,7 @@ impl Buffer {
             ReplyState::Filled6 { .. } => self.as_echo_reply6().unwrap().Address.sin6_addr,
             _ => return None,
         };
-        Some(wip6_to_rip6(addr))
+        Some(rust_ipv6(addr))
     }
     /// Gets the responding IpAddr from the last request this buffer was involved in. Returns None
     /// if the buffer wasn't used in a request, or there was no reply.

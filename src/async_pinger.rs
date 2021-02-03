@@ -64,7 +64,7 @@ use std::{
  */
 
 use crate::{
-    util::{rip6_to_wip6, rip_to_wip},
+    util::{windows_ipv6, windows_ipv4},
     Buffer, Error, IpPair,
 };
 /// A pinger that does not block when sending.
@@ -422,8 +422,8 @@ fn try_recv_job(rx: &Receiver<Job>) -> bool {
                     NULL,             // Event
                     callback_fn as _, // ApcRoutine,
                     arcptr as _,      // ApcContext,
-                    rip_to_wip(src),
-                    rip_to_wip(dst),
+                    windows_ipv4(src),
+                    windows_ipv4(dst),
                     job.data_ptr,
                     job.data_len,
                     &mut ip_opts,
@@ -441,7 +441,7 @@ fn try_recv_job(rx: &Receiver<Job>) -> bool {
                     NULL,             // Event
                     callback_fn as _, // ApcRoutine,
                     arcptr as _,      // ApcContext,
-                    rip_to_wip(dst),
+                    windows_ipv4(dst),
                     job.data_ptr,
                     job.data_len,
                     &mut ip_opts,
@@ -455,12 +455,12 @@ fn try_recv_job(rx: &Receiver<Job>) -> bool {
         V6 { src, dst } => {
             let mut src = SOCKADDR_IN6 {
                 sin6_family: AF_INET6 as _,
-                sin6_addr: rip6_to_wip6(src.unwrap_or(Ipv6Addr::UNSPECIFIED)),
+                sin6_addr: windows_ipv6(src.unwrap_or(Ipv6Addr::UNSPECIFIED)),
                 ..Default::default()
             };
             let mut dst = SOCKADDR_IN6 {
                 sin6_family: AF_INET6 as _,
-                sin6_addr: rip6_to_wip6(dst),
+                sin6_addr: windows_ipv6(dst),
                 ..Default::default()
             };
             let ret = unsafe {
