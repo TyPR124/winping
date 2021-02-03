@@ -4,3 +4,4 @@ Cargo.lock
 .cargo/config
 src/bin/*
 TODO.txt
+/.vscode
