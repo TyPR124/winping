@@ -22,12 +22,14 @@ use winapi::um::ipexport::IP_OPTION_INFORMATION32 as IP_OPTION_INFORMATION;
 
 use std::{
     fmt::{self, Debug, Display, Formatter},
-    mem,
     net::{IpAddr, Ipv4Addr, Ipv6Addr},
     sync::Arc,
 };
 
-use crate::{Buffer, Error};
+use crate::{
+    util::{rip6_to_wip6, rip_to_wip},
+    Buffer, Error,
+};
 
 struct Handles {
     v4: HANDLE,
@@ -156,7 +158,7 @@ impl Pinger {
         let ret = unsafe {
             IcmpSendEcho(
                 self.handles.v4,
-                mem::transmute(dst),
+                rip_to_wip(dst),
                 buf.request_data_ptr(),
                 buf.request_data_len(),
                 &mut self.make_ip_opts(),
@@ -187,8 +189,8 @@ impl Pinger {
                 NULL,      // Event
                 NULL as _, // ApcRoutine
                 NULL,      // ApcContext
-                mem::transmute(src),
-                mem::transmute(dst),
+                rip_to_wip(src),
+                rip_to_wip(dst),
                 buf.request_data_ptr(),
                 buf.request_data_len(),
                 &mut self.make_ip_opts(),
@@ -214,7 +216,7 @@ impl Pinger {
     pub fn send6(&self, dst: Ipv6Addr, buf: &mut Buffer) -> Result<u32, Error> {
         let mut dst = SOCKADDR_IN6 {
             sin6_family: AF_INET6 as _,
-            sin6_addr: unsafe { mem::transmute(dst) },
+            sin6_addr: rip6_to_wip6(dst),
             ..Default::default()
         };
         buf.init_for_send();
@@ -252,12 +254,12 @@ impl Pinger {
     pub fn send6_from(&self, src: Ipv6Addr, dst: Ipv6Addr, buf: &mut Buffer) -> Result<u32, Error> {
         let mut dst = SOCKADDR_IN6 {
             sin6_family: AF_INET6 as _,
-            sin6_addr: unsafe { mem::transmute(dst) },
+            sin6_addr: rip6_to_wip6(dst),
             ..Default::default()
         };
         let mut src = SOCKADDR_IN6 {
             sin6_family: AF_INET6 as _,
-            sin6_addr: unsafe { mem::transmute(src) },
+            sin6_addr: rip6_to_wip6(src),
             ..Default::default()
         };
         buf.init_for_send();

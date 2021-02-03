@@ -34,6 +34,7 @@ mod async_pinger;
 mod buffer;
 mod error;
 mod pinger;
+pub(crate) mod util;
 
 #[cfg(feature = "async")]
 pub use async_pinger::{set_async_buffer_size, AsyncPinger, AsyncResult, PingFuture};

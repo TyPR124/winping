@@ -31,7 +31,7 @@ use static_assertions::assert_impl_all;
 use std::{
     future::Future,
     marker::Unpin,
-    mem::{self, replace},
+    mem::replace,
     net::{IpAddr, Ipv4Addr, Ipv6Addr},
     pin::Pin,
     sync::atomic::{AtomicBool, AtomicUsize, Ordering},
@@ -63,7 +63,10 @@ use std::{
  *
  */
 
-use crate::{Buffer, Error, IpPair};
+use crate::{
+    util::{rip6_to_wip6, rip_to_wip},
+    Buffer, Error, IpPair,
+};
 /// A pinger that does not block when sending.
 #[derive(Clone)]
 pub struct AsyncPinger {
@@ -224,7 +227,9 @@ unsafe impl Send for Job {}
 
 impl Worker {
     fn new() -> Self {
-        Self { inner: ASYNC_SENDER.clone() }
+        Self {
+            inner: ASYNC_SENDER.clone(),
+        }
     }
     fn begin_v4(
         &self,
@@ -417,8 +422,8 @@ fn try_recv_job(rx: &Receiver<Job>) -> bool {
                     NULL,             // Event
                     callback_fn as _, // ApcRoutine,
                     arcptr as _,      // ApcContext,
-                    mem::transmute(src),
-                    mem::transmute(dst),
+                    rip_to_wip(src),
+                    rip_to_wip(dst),
                     job.data_ptr,
                     job.data_len,
                     &mut ip_opts,
@@ -436,7 +441,7 @@ fn try_recv_job(rx: &Receiver<Job>) -> bool {
                     NULL,             // Event
                     callback_fn as _, // ApcRoutine,
                     arcptr as _,      // ApcContext,
-                    mem::transmute(dst),
+                    rip_to_wip(dst),
                     job.data_ptr,
                     job.data_len,
                     &mut ip_opts,
@@ -450,15 +455,12 @@ fn try_recv_job(rx: &Receiver<Job>) -> bool {
         V6 { src, dst } => {
             let mut src = SOCKADDR_IN6 {
                 sin6_family: AF_INET6 as _,
-                sin6_addr: unsafe {
-                    #[allow(clippy::or_fun_call)] // Really clippy... it's a const fn...
-                    mem::transmute(src.unwrap_or(Ipv6Addr::new(0, 0, 0, 0, 0, 0, 0, 0)))
-                },
+                sin6_addr: rip6_to_wip6(src.unwrap_or(Ipv6Addr::UNSPECIFIED)),
                 ..Default::default()
             };
             let mut dst = SOCKADDR_IN6 {
                 sin6_family: AF_INET6 as _,
-                sin6_addr: unsafe { mem::transmute(dst) },
+                sin6_addr: rip6_to_wip6(dst),
                 ..Default::default()
             };
             let ret = unsafe {
